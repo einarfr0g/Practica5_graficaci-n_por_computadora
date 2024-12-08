@@ -25,12 +25,14 @@ void Model::initModel() {
 
   for (int i = 0; i < VBO_size; i++) {
     vertices[i] = this->vertices_vec[i];
+    std::cout << vertices[i] << " ";
+    if ((i + 1) % 3 == 0) {
+      std::cout << "\n";
+    }
   }
 
   for (int i = 0; i < EBO_size; i++) {
     indices[i] = this->indices_vec[i];
-
-    // std::cout << indices[i] << "\n";
   }
 
   for (int i = 0; i < NV_size; i++) {
@@ -53,14 +55,12 @@ void Model::initModel() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                GL_STATIC_DRAW);
-
   // Especificar el layout del vertex shader
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
                         (GLvoid *)0);
 
   glEnableVertexAttribArray(0);
   // bind las normales
-
   glBindBuffer(GL_ARRAY_BUFFER, NVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(normales), normales, GL_STATIC_DRAW);
 
@@ -89,7 +89,6 @@ void Model::renderModel(glm::mat4 view, glm::mat4 projection) {
 
   // Dibujar el cubo
   glBindVertexArray(VAO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glDrawElements(GL_LINES, indices_vec.size(), GL_UNSIGNED_INT, 0);
 }
 void Model::finish() {
