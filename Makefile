@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra
 LDFLAGS =  -lglfw -lGL -lGLEW 
 
-SRC_FILES = main.cpp src/shader.cpp  src/model.cpp src/ventana.cpp
+SRC_FILES = main.cpp src/shader.cpp  src/model.cpp src/ventana.cpp src/OBJ_reader.cpp
 OBJ_FILES = $(SRC_FILES:.cpp=.o)
 TARGET = cubo
 
