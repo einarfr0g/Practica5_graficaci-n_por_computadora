@@ -14,7 +14,7 @@
  */
 std::map<std::string, std::vector<float>> read_OBJ(std::string name_document) {
 
-  std::fstream obj(name_document);
+  std::ifstream obj(name_document);
   std::string renglon;
 
   if (!obj.is_open())
@@ -30,8 +30,14 @@ std::map<std::string, std::vector<float>> read_OBJ(std::string name_document) {
   std::vector<float> indexes;
   // vector de normales
   std::vector<float> normales;
+  // vector maximo para la camara
+  std::vector<float> vecmax;
   // string auxiliar
   std::string txt_storage;
+
+  double max_x = 0;
+  double max_y = 0;
+  double max_z = 10;
 
   while (!obj.eof()) {
 
@@ -89,6 +95,13 @@ std::map<std::string, std::vector<float>> read_OBJ(std::string name_document) {
 
       z = stod(renglon.substr(0, aux_index));
 
+      if (max_x < x)
+        max_x = x;
+      if (max_y < y)
+        max_y = y;
+      if (max_z < z)
+        max_z = z;
+
       normales.push_back(x);
       normales.push_back(y);
       normales.push_back(z);
@@ -143,6 +156,8 @@ std::map<std::string, std::vector<float>> read_OBJ(std::string name_document) {
 
       // w = stod(renglon.substr(0, renglon.find("/")));
 
+      // std::cout << "pasoo un indice:" << x << " " << y << " " << z << "\n";
+
       indexes.push_back(x);
       indexes.push_back(y);
       indexes.push_back(z);
@@ -152,10 +167,17 @@ std::map<std::string, std::vector<float>> read_OBJ(std::string name_document) {
     // std::cout<<renglon<<"\n";
   }
 
+  vecmax.push_back(max_x);
+  vecmax.push_back(max_y);
+  vecmax.push_back(max_z);
+
+  std::cout << vecmax.size() << "\n";
+
   std::map<std::string, std::vector<float>> model_data;
   model_data["VBO"] = points;
   model_data["EBO"] = indexes;
   model_data["NV"] = normales;
+  model_data["MAXVEC"] = vecmax;
 
   return model_data;
 }
