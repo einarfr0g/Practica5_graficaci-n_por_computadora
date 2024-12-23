@@ -1,5 +1,6 @@
 #include "../header/model.h"
 #include "../header/OBJ_reader.h"
+#include "../header/shader.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/vector_float3.hpp>
 
@@ -8,23 +9,15 @@ Model::Model(std::string OBJ_dir) {
   OBJ_reader *model = new OBJ_reader(OBJ_dir);
   this->vertices_vec = model->model_buffers["VBO"];
 
-  // for (int i = 0; i < model.model_buffers["EBO"].size(); i++) {
-  //  std::cout << model.model_buffers["EBO"][i] - 1 << "\n";
-  // this->indices_vec.push_back(model.model_buffers["EBO"][i] - 1);
-  // std::cout << indices_vec[i] << "\n";
-  //}
+  std::cout << "llegamos al for" << "\n";
 
   for (auto e : model->model_buffers["EBO"]) {
     this->indices_vec.push_back(static_cast<GLuint>(round(e)) - 1);
   }
 
+  std::cout << "salimos del for" << "\n";
+
   this->normales_vec = model->model_buffers["NV"];
-
-  GLfloat x = model->model_buffers["MAXVEC"][0];
-  GLfloat y = model->model_buffers["MAXVEC"][1];
-  GLfloat z = model->model_buffers["MAXVEC"][2];
-
-  this->ojo = glm::vec3(x * 4.0, y * 4.0, z * 4.0);
 
   delete model;
 
@@ -104,10 +97,11 @@ void Model::renderModel(glm::mat4 view, glm::mat4 projection) {
   shader->use();
 
   // Enviar las matrices al shader
-  shader->setVec3("posCam", ojo);
+  shader->setVec3("posCam", glm::vec3(0.0f, 0.0f, -10.0f));
   shader->setMat4x4("model", modelmat);
   shader->setMat4x4("view",
-                    glm::lookAt(ojo, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0)));
+                    glm::lookAt(glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0),
+                                glm::vec3(0.0, 1.0, 0.0)));
   shader->setMat4x4("projection", projection);
 
   // Dibujar el cubo

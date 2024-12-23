@@ -1,183 +1,281 @@
 #pragma once
+#include <GL/eglew.h>
 #include <fstream>
 #include <iostream>
-#include <map>
-#include <stdlib.h>
+#include <pthread.h>
 #include <string>
 #include <vector>
 
-/**
- * @brief genera un par con dos vectores de coordenas, first:representa a los
- * vertices second:representa a los indices;
- * @param name_document string que contiene el nombre del obj a renderizar
- * @return par con dos vectores de Vector4
+// struct para regresar un vector en las funciones
+struct vec_float3 {
+  GLfloat x;
+  GLfloat y;
+  GLfloat z;
+};
+
+/*funcion para leer una linea de tipo vector
+ * @params vector_line linea de el vector
+ * @return struct vec_float3 con el vector de GLfloats
  */
-std::map<std::string, std::vector<float>> read_OBJ(std::string name_document) {
+vec_float3 read_vec3(std::string vector_line) {
 
-  std::ifstream obj(name_document);
-  std::string renglon;
+  uint aux_index;
 
-  if (!obj.is_open())
-    std::cout << "error al abrir el archivo" << "\n";
-  // variable para guardar indices
-  int aux_index = 0;
+  GLfloat x, y, z;
 
-  // coordenadas de los vectores
-  double x, y, z, w;
+  aux_index = vector_line.find(" ");
 
-  std::vector<float> points;
-  // vector de indices
-  std::vector<float> indexes;
-  // vector de normales
-  std::vector<float> normales;
-  // vector maximo para la camara
-  std::vector<float> vecmax;
-  // string auxiliar
-  std::string txt_storage;
+  vector_line.erase(0, aux_index + 1);
+  // x
+  aux_index = vector_line.find(" ");
 
-  double max_x = 0;
-  double max_y = 0;
-  double max_z = 10;
+  x = stod(vector_line.substr(0, aux_index));
 
-  while (!obj.eof()) {
+  vector_line.erase(0, aux_index + 1);
 
-    std::getline(obj, renglon);
+  // y
+  aux_index = vector_line.find(" ");
 
-    if (renglon == "")
-      continue;
+  y = stod(vector_line.substr(0, aux_index));
 
-    if (renglon[0] == 'v' && renglon[1] == ' ') {
+  vector_line.erase(0, aux_index + 1);
 
-      renglon.erase(0, 2);
-      // x
-      aux_index = renglon.find(" ");
+  // z
+  aux_index = vector_line.find(" ");
 
-      x = stod(renglon.substr(0, aux_index));
+  z = stod(vector_line.substr(0, aux_index));
 
-      renglon.erase(0, aux_index + 1);
+  vec_float3 vec;
 
-      // y
-      aux_index = renglon.find(" ");
+  vec.x = x;
 
-      y = stod(renglon.substr(0, aux_index));
+  vec.y = y;
 
-      renglon.erase(0, aux_index + 1);
+  vec.z = z;
 
-      // z
-      aux_index = renglon.find(" ");
+  return vec;
+}
 
-      z = stod(renglon.substr(0, aux_index));
+// struct para regresar un vector de 2 GLfolats (para los vectores de texturas)
+struct vec_float2 {
+  GLfloat x;
+  GLfloat y;
+};
 
-      points.push_back(x);
-      points.push_back(y);
-      points.push_back(z);
-      // std::cout << "pasoo un vector:" << x << " " << y << " " << z << "\n";
-    }
+/*Función par leer una linea de un vector de dos números floatantes
+ *@param std::string vector_line la linea en que se encuentra el vector
+ *@return vec_float2 struct de un vector de 2 GLfloats
+ */
+vec_float2 read_vec2(std::string vector_line) {
 
-    if (renglon[0] == 'v' && renglon[1] == 'n') {
-      renglon.erase(0, 3);
-      // x
-      aux_index = renglon.find(" ");
+  uint aux_index;
 
-      x = stod(renglon.substr(0, aux_index));
+  GLfloat x, y;
 
-      renglon.erase(0, aux_index + 1);
+  aux_index = vector_line.find(" ");
 
-      // y
-      aux_index = renglon.find(" ");
+  vector_line.erase(0, aux_index + 1);
+  // x
+  aux_index = vector_line.find(" ");
 
-      y = stod(renglon.substr(0, aux_index));
+  x = stod(vector_line.substr(0, aux_index));
 
-      renglon.erase(0, aux_index + 1);
+  vector_line.erase(0, aux_index + 1);
 
-      // z
-      aux_index = renglon.find(" ");
+  // y
+  aux_index = vector_line.find(" ");
 
-      z = stod(renglon.substr(0, aux_index));
+  y = stod(vector_line.substr(0, aux_index));
 
-      if (max_x < x)
-        max_x = x;
-      if (max_y < y)
-        max_y = y;
-      if (max_z < z)
-        max_z = z;
+  vector_line.erase(0, aux_index + 1);
 
-      normales.push_back(x);
-      normales.push_back(y);
-      normales.push_back(z);
-      // std::cout << "pasoo un normal:" << x << " " << y << " " << z << "\n";
-    }
+  vec_float2 vec;
 
-    if (renglon[0] == 'f') {
-      renglon.erase(0, 2);
-      w = -1;
+  vec.x = x;
 
-      // x
-      aux_index = renglon.find(" ");
+  vec.y = y;
 
-      txt_storage = renglon.substr(0, aux_index + 1);
+  return vec;
+}
 
-      // cout<<txt_storage.substr(0,txt_storage.find("/"))<<"\n";
+// struct para regresar indices en la funcion read_indices
+struct vec_index {
+  GLuint v;
+  GLuint vt;
+  GLuint vn;
+  bool there_are_textures = true;
+};
+// struct para una linea entera de indices
+struct vec_indices {
+  vec_index index1;
+  vec_index index2;
+  vec_index index3;
+};
 
-      x = stod(txt_storage.substr(0, txt_storage.find("/")));
+/*Función que le una subtring del tipo uint/uint/uint o uint//uint indices de un
+ *obj
+ *@param std::string index_string substring donde está el indice
+ *@return vec_index struct que contiene la información de un indice
+ */
+vec_index read_index(std::string index_string) {
 
-      renglon.erase(0, aux_index + 1);
+  std::string::size_type aux_index;
 
-      // y
-      aux_index = renglon.find(" ");
+  GLfloat x, y, z;
 
-      txt_storage = renglon.substr(0, aux_index + 1);
+  vec_index index;
 
-      y = stod(txt_storage.substr(0, txt_storage.find("/")));
+  // x
+  aux_index = index_string.find("/");
 
-      renglon.erase(0, aux_index + 1);
-      // z
-
-      if (renglon.find(" ") == -1) {
-        // cout<<renglon.substr(0,renglon.find("/"))<<"\n";
-
-        z = stod(renglon.substr(0, renglon.find("/")));
-
-        indexes.push_back(x);
-        indexes.push_back(y);
-        indexes.push_back(z);
-
-        continue;
-      } else {
-
-        aux_index = renglon.find(" ");
-
-        txt_storage = renglon.substr(0, aux_index + 1);
-
-        z = stod(txt_storage.substr(0, txt_storage.find("/")));
-
-        renglon.erase(0, aux_index + 1);
-      }
-
-      // w = stod(renglon.substr(0, renglon.find("/")));
-
-      // std::cout << "pasoo un indice:" << x << " " << y << " " << z << "\n";
-
-      indexes.push_back(x);
-      indexes.push_back(y);
-      indexes.push_back(z);
-      // indexes.push_back(w);
-    }
-
-    // std::cout<<renglon<<"\n";
+  if (aux_index == std::string::npos) {
+    std::cout << "Modelo contiene indices de tipo no admitido" << "\n";
+    return index;
   }
 
-  vecmax.push_back(max_x);
-  vecmax.push_back(max_y);
-  vecmax.push_back(max_z);
+  std::string string_aux;
 
-  std::cout << vecmax.size() << "\n";
+  aux_index = index_string.find("/");
 
-  std::map<std::string, std::vector<float>> model_data;
-  model_data["VBO"] = points;
-  model_data["EBO"] = indexes;
-  model_data["NV"] = normales;
-  model_data["MAXVEC"] = vecmax;
+  string_aux = index_string.substr(0, aux_index);
 
-  return model_data;
+  x = std::stoul(string_aux);
+
+  // std::cout << "entró v" << "\n";
+
+  // ver si hay vector de texturas
+  if (aux_index + 1 == index_string.find("/", aux_index + 1)) {
+    // z
+    index.there_are_textures = false;
+
+    aux_index += 2;
+
+    string_aux = index_string.substr(aux_index, index_string.size());
+
+    z = std::stoul(string_aux);
+  } else {
+    // y
+
+    index.there_are_textures = true;
+
+    index_string.erase(0, aux_index + 1);
+
+    aux_index = index_string.find("/");
+
+    string_aux = index_string.substr(0, aux_index);
+
+    y = std::stoul(index_string);
+
+    index_string.erase(0, aux_index + 1);
+
+    // z
+    z = std::stoul(index_string);
+  }
+
+  index.v = x;
+  index.vt = y;
+  index.vn = z;
+
+  return index;
+}
+
+/*función que lee las lineas de indices y regresar una struct con la información
+ *@param std::string indices_line el renglon
+ *@retrun vec_index struct con la información
+ */
+vec_indices read_indices(std::string indices_line) {
+
+  // std::cout << "pasó un indice" << "\n";
+  vec_index index_aux;
+
+  std::string aux_string;
+
+  vec_indices result;
+
+  // std::cout << "La linea es " << indices_line << "\n";
+
+  std::string::size_type pivot_index;
+
+  indices_line.erase(0, 2);
+
+  // index1
+  pivot_index = indices_line.find(" ");
+
+  aux_string = indices_line.substr(0, pivot_index);
+
+  // std::cout << "La string1 es: " << aux_string << "\n";
+
+  result.index1 = read_index(aux_string);
+
+  indices_line.erase(0, pivot_index + 1);
+
+  // index2
+  pivot_index = indices_line.find(" ");
+
+  aux_string = indices_line.substr(0, pivot_index);
+
+  // std::cout << "La string2 es: " << aux_string << "\n";
+
+  result.index2 = read_index(aux_string);
+
+  indices_line.erase(0, pivot_index + 1);
+
+  // index3
+  aux_string = indices_line.substr(0, indices_line.size());
+
+  // std::cout << "La string3 es: " << aux_string << "\n";
+
+  result.index3 = read_index(aux_string);
+
+  return result;
+}
+
+struct obj {
+  std::vector<GLfloat> points;
+  std::vector<GLfloat> normals;
+  std::vector<GLfloat> textures;
+  std::vector<vec_indices> indices;
+  bool are_textures;
+};
+
+obj read_obj(std::string obj_dir) {
+  std::ifstream obj_file(obj_dir);
+
+  if (!obj_file.is_open())
+    std::cout << "error al abrir el archivo" << "\n";
+
+  std::string line;
+  vec_float2 vec2_aux;
+  vec_float3 vec3_aux;
+  obj result;
+  bool indices_type = false;
+
+  while (!obj_file.eof()) {
+    std::getline(obj_file, line);
+
+    if (line == "")
+      continue;
+    else if (line[0] == 'v' && line[1] == ' ') {
+      vec3_aux = read_vec3(line);
+      result.points.push_back(vec3_aux.x);
+      result.points.push_back(vec3_aux.y);
+      result.points.push_back(vec3_aux.z);
+    } else if (line[0] == 'v' && line[1] == 'n') {
+      vec3_aux = read_vec3(line);
+      result.normals.push_back(vec3_aux.x);
+      result.normals.push_back(vec3_aux.y);
+      result.normals.push_back(vec3_aux.z);
+    } else if (line[0] == 'v' && line[1] == 't') {
+      vec2_aux = read_vec2(line);
+      result.textures.push_back(vec2_aux.y);
+      result.textures.push_back(vec2_aux.y);
+    } else if (line[0] == 'f') {
+      result.indices.push_back(read_indices(line));
+      if (indices_type == false) {
+        indices_type = true;
+        result.are_textures = read_indices(line).index1.there_are_textures;
+      }
+    }
+  }
+  return result;
 }
